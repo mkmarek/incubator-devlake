@@ -20,11 +20,12 @@ package impl
 import (
 	"context"
 	"fmt"
-	"github.com/apache/incubator-devlake/core/models/domainlayer/devops"
 	"net/url"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/apache/incubator-devlake/core/models/domainlayer/devops"
 
 	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
@@ -149,7 +150,7 @@ func (p GithubGraphql) PrepareTaskData(taskCtx plugin.TaskContext, options map[s
 			return nil, err
 		}
 
-		err = connection.UseAppInstallationTokenForRepo(op.Name, apiClient)
+		connection, err = connection.UseAppInstallationTokenForRepo(op.Name, apiClient)
 		if err != nil {
 			return nil, err
 		}

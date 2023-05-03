@@ -165,7 +165,7 @@ func (p Github) PrepareTaskData(taskCtx plugin.TaskContext, options map[string]i
 			return nil, err
 		}
 
-		err = connection.UseAppInstallationTokenForRepo(op.Name, apiClient)
+		connection, err = connection.UseAppInstallationTokenForRepo(op.Name, apiClient)
 		if err != nil {
 			return nil, err
 		}

@@ -54,7 +54,10 @@ func Proxy(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Er
 				return nil, errors.AsLakeErrorType(fmt.Errorf("invalid installationid: %s", cerr))
 			}
 
-			connection.UseAppInstallationToken(int32(installationID), apiClient)
+			connection, err = connection.UseAppInstallationToken(int32(installationID), apiClient)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 

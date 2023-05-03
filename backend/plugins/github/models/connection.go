@@ -108,33 +108,34 @@ func (GithubConnection) TableName() string {
 	return "_tool_github_connections"
 }
 
-func (c *GithubConnection) UseAppInstallationTokenForRepo(repo string, apiClient apihelperabstract.ApiClientAbstract) errors.Error {
+func (c *GithubConnection) UseAppInstallationTokenForRepo(repo string, apiClient apihelperabstract.ApiClientAbstract) (*GithubConnection, errors.Error) {
 	if c.AuthMethod != "githubapp" {
-		return errors.AsLakeErrorType(fmt.Errorf("AuthMethod is not githubapp"))
+		return nil, errors.AsLakeErrorType(fmt.Errorf("AuthMethod is not githubapp"))
 	}
 
 	installationRes, err := getAppInstallation(repo, apiClient)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	return c.UseAppInstallationToken(installationRes.Id, apiClient)
 }
 
-func (c *GithubConnection) UseAppInstallationToken(installationId int32, apiClient apihelperabstract.ApiClientAbstract) errors.Error {
+func (c *GithubConnection) UseAppInstallationToken(installationId int32, apiClient apihelperabstract.ApiClientAbstract) (*GithubConnection, errors.Error) {
 	if c.AuthMethod != "githubapp" {
-		return errors.AsLakeErrorType(fmt.Errorf("AuthMethod is not githubapp"))
+		return nil, errors.AsLakeErrorType(fmt.Errorf("AuthMethod is not githubapp"))
 	}
 
 	tokenRes, err := getAppInstallationAccessToken(apiClient, installationId)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	c.AuthMethod = "token"
-	c.Token = tokenRes.Token
+	newConn := *c
 
-	return nil
+	newConn.AuthMethod = "token"
+	newConn.Token = tokenRes.Token
+	return &newConn, nil
 }
 
 // Using GithubUserOfToken because it requires authentication, and it is public information anyway.
@@ -160,6 +161,9 @@ func getAppInstallation(
 	apiClient apihelperabstract.ApiClientAbstract,
 ) (*GithubAppInstallation, errors.Error) {
 	installationRes := &GithubAppInstallation{}
+
+	fmt.Println(fmt.Sprintf("repos/%s/installation", repo))
+
 	res, err := apiClient.Get(fmt.Sprintf("repos/%s/installation", repo), nil, nil)
 	if err != nil {
 		return nil, err
@@ -183,6 +187,9 @@ func getAppInstallationAccessToken(
 	apiClient apihelperabstract.ApiClientAbstract,
 	installationID int32,
 ) (*InstallationToken, errors.Error) {
+
+	fmt.Println(fmt.Sprintf("/app/installations/%d/access_tokens", installationID))
+
 	resp, err := apiClient.Post(fmt.Sprintf("/app/installations/%d/access_tokens", installationID), nil, nil, nil)
 	if err != nil {
 		return nil, err

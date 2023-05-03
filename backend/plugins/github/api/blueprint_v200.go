@@ -131,19 +131,23 @@ func makeDataSourcePipelinePlanV200(
 				return nil, err
 			}
 
+			var token string
 			if connection.AuthMethod == "githubapp" {
 				apiClient, err := api.NewApiClientFromConnection(context.TODO(), basicRes, connection)
 				if err != nil {
 					return nil, err
 				}
 
-				err = connection.UseAppInstallationTokenForRepo(op.Name, apiClient)
+				newConnection, err := connection.UseAppInstallationTokenForRepo(op.Name, apiClient)
 				if err != nil {
 					return nil, err
 				}
+
+				token = strings.Split(newConnection.Token, ",")[0]
+			} else {
+				token = strings.Split(connection.Token, ",")[0]
 			}
 
-			token := strings.Split(connection.Token, ",")[0]
 			cloneUrl.User = url.UserPassword("git", token)
 			stage = append(stage, &plugin.PipelineTask{
 				Plugin: "gitextractor",
