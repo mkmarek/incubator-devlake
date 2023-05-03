@@ -20,7 +20,9 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
+	"strconv"
 	"time"
 
 	"github.com/apache/incubator-devlake/core/errors"
@@ -39,6 +41,23 @@ func Proxy(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Er
 	if err != nil {
 		return nil, err
 	}
+
+	if connection.AuthMethod == "githubapp" {
+		if installationIDParam, ok := input.Params["installationid"]; ok {
+			apiClient, err := helper.NewApiClientFromConnection(context.TODO(), basicRes, connection)
+			if err != nil {
+				return nil, err
+			}
+
+			installationID, cerr := strconv.Atoi(installationIDParam)
+			if cerr != nil {
+				return nil, errors.AsLakeErrorType(fmt.Errorf("invalid installationid: %s", cerr))
+			}
+
+			connection.UseAppInstallationToken(int32(installationID), apiClient)
+		}
+	}
+
 	apiClient, err := helper.NewApiClientFromConnection(context.TODO(), basicRes, connection)
 	if err != nil {
 		return nil, err

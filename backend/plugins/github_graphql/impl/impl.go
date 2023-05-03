@@ -143,6 +143,18 @@ func (p GithubGraphql) PrepareTaskData(taskCtx plugin.TaskContext, options map[s
 		return nil, errors.Default.Wrap(err, "unable to get github connection by the given connection ID: %v")
 	}
 
+	if connection.AuthMethod == "githubapp" {
+		apiClient, err := githubTasks.CreateApiClient(taskCtx, connection)
+		if err != nil {
+			return nil, err
+		}
+
+		err = connection.UseAppInstallationTokenForRepo(op.Name, apiClient)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	apiClient, err := githubTasks.CreateApiClient(taskCtx, connection)
 	if err != nil {
 		return nil, errors.Default.Wrap(err, "unable to get github API client instance")
